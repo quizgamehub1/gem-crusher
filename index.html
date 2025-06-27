@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gem Crusher - Match & Crush!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            max-width: 400px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4a5568;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .username {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 2px;
+            background: #2d3748;
+            padding: 10px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .gem {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .gem:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .gem.selected {
+            border: 3px solid #ffd700;
+            transform: scale(1.15);
+        }
+
+        .gem.red { background: linear-gradient(45deg, #ff6b6b, #ee5a52); }
+        .gem.blue { background: linear-gradient(45deg, #4ecdc4, #44a08d); }
+        .gem.green { background: linear-gradient(45deg, #95e1d3, #fce38a); }
+        .gem.purple { background: linear-gradient(45deg, #a8edea, #fed6e3); }
+        .gem.yellow { background: linear-gradient(45deg, #ffeaa7, #fab1a0); }
+        .gem.orange { background: linear-gradient(45deg, #fd79a8, #fdcb6e); }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            transition: width 0.3s ease;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .popup-content {
+            background: white;
+            color: #2d3748;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-info {
+            font-size: 12px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .ad-container {
+            background: #f7fafc;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            text-align: center;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .achievement {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #744210;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            transform: translateX(300px);
+            transition: transform 0.5s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .achievement.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            .gem {
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- AdMob Banner Ad Container -->
+        <div class="ad-container" id="bannerAdContainer">
+            <!-- AdMob banner will be inserted here by the mobile app -->
+        </div>
+
+        <div class="header">
+            <h1 class="title">💎 Gem Crusher</h1>
+            <div class="username">@quizgamehub1</div>
+        </div>
+
+        <div class="stats">
+            <div>Score: <span id="score">0</span></div>
+            <div>Level: <span id="level">1</span></div>
+            <div>Moves: <span id="moves">30</span></div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress" style="width: 0%"></div>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="restartGame()">🔄 New Game</button>
+            <button class="btn btn-primary" onclick="showHint()">💡 Hint</button>
+        </div>
+
+        <!-- AdMob Rectangle Ad Container -->
+        <div class="ad-container" id="rectangleAdContainer">
+            <!-- AdMob rectangle ad will be inserted here by the mobile app -->
+        </div>
+    </div>
+
+    <!-- Game Over Popup -->
+    <div class="game-over" id="gameOver" style="display: none;">
+        <div class="popup-content">
+            <h2>🎉 Game Over!</h2>
+            <div class="player-info">Player: quizgamehub1</div>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <p>Level Reached: <span id="finalLevel">1</span></p>
+            <br>
+            <button class="btn btn-primary" onclick="restartGame()">Play Again</button>
+            <button class="btn btn-primary" onclick="watchAdForBonus()" style="margin-top: 10px;">
+                📺 Watch Ad for Bonus
+            </button>
+        </div>
+    </div>
+
+    <!-- Achievement Notification -->
+    <div class="achievement" id="achievement"></div>
+
+    <script>
+        class GemCrusher {
+            constructor() {
+                this.board = [];
+                this.size = 8;
+                this.score = 0;
+                this.level = 1;
+                this.moves = 30;
+                this.targetScore = 1000;
+                this.selectedGem = null;
+                this.gemTypes = ['💎', '💍', '🔷', '🔹', '💠', '🟢'];
+                this.colors = ['red', 'blue', 'green', 'purple', 'yellow', 'orange'];
+                this.achievements = [];
+                this.playerName = 'quizgamehub1';
+                
+                this.initBoard();
+                this.renderBoard();
+                this.updateUI();
+            }
+
+            initBoard() {
+                this.board = [];
+                for (let row = 0; row < this.size; row++) {
+                    this.board[row] = [];
+                    for (let col = 0; col < this.size; col++) {
+                        this.board[row][col] = this.getRandomGem();
+                    }
+                }
+                // Ensure no initial matches
+                this.removeInitialMatches();
+            }
+
+            getRandomGem() {
+                const index = Math.floor(Math.random() * this.gemTypes.length);
+                return {
+                    type: this.gemTypes[index],
+                    color: this.colors[index],
+                    id: Math.random().toString(36).substr(2, 9)
+                };
+            }
+
+            removeInitialMatches() {
+                let hasMatches = true;
+                while (hasMatches) {
+                    hasMatches = false;
+                    for (let row = 0; row < this.size; row++) {
+                        for (let col = 0; col < this.size; col++) {
+                            if (this.hasMatchAt(row, col)) {
+                                this.board[row][col] = this.getRandomGem();
+                                hasMatches = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            hasMatchAt(row, col) {
+                const gem = this.board[row][col];
+                
+                // Check horizontal
+                let horizontalCount = 1;
+                for (let i = col - 1; i >= 0 && this.board[row][i].type === gem.type; i--) horizontalCount++;
+                for (let i = col + 1; i < this.size && this.board[row][i].type === gem.type; i++) horizontalCount++;
+                
+                // Check vertical
+                let verticalCount = 1;
+                for (let i = row - 1; i >= 0 && this.board[i][col].type === gem.type; i--) verticalCount++;
+                for (let i = row + 1; i < this.size && this.board[i][col].type === gem.type; i++) verticalCount++;
+                
+                return horizontalCount >= 3 || verticalCount >= 3;
+            }
+
+            renderBoard() {
+                const boardElement = document.getElementById('gameBoard');
+                boardElement.innerHTML = '';
+                
+                for (let row = 0; row < this.size; row++) {
+                    for (let col = 0; col < this.size; col++) {
+                        const gem = this.board[row][col];
+                        const gemElement = document.createElement('div');
+                        gemElement.className = `gem ${gem.color}`;
+                        gemElement.textContent = gem.type;
+                        gemElement.dataset.row = row;
+                        gemElement.dataset.col = col;
+                        gemElement.addEventListener('click', () => this.selectGem(row, col));
+                        boardElement.appendChild(gemElement);
+                    }
+                }
+            }
+
+            selectGem(row, col) {
+                if (this.moves <= 0) return;
+
+                const clickedGem = { row, col };
+                
+                if (!this.selectedGem) {
+                    this.selectedGem = clickedGem;
+                    this.highlightGem(row, col, true);
+                } else if (this.selectedGem.row === row && this.selectedGem.col === col) {
+                    this.selectedGem = null;
+                    this.highlightGem(row, col, false);
+                } else if (this.areAdjacent(this.selectedGem, clickedGem)) {
+                    this.swapGems(this.selectedGem, clickedGem);
+                } else {
+                    this.highlightGem(this.selectedGem.row, this.selectedGem.col, false);
+                    this.selectedGem = clickedGem;
+                    this.highlightGem(row, col, true);
+                }
+            }
+
+            highlightGem(row, col, highlight) {
+                const gemElement = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                if (highlight) {
+                    gemElement.classList.add('selected');
+                } else {
+                    gemElement.classList.remove('selected');
+                }
+            }
+
+            areAdjacent(gem1, gem2) {
+                const rowDiff = Math.abs(gem1.row - gem2.row);
+                const colDiff = Math.abs(gem1.col - gem2.col);
+                return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+            }
+
+            swapGems(gem1, gem2) {
+                // Temporarily swap
+                const temp = this.board[gem1.row][gem1.col];
+                this.board[gem1.row][gem1.col] = this.board[gem2.row][gem2.col];
+                this.board[gem2.row][gem2.col] = temp;
+
+                // Check if swap creates matches
+                if (this.hasMatchAt(gem1.row, gem1.col) || this.hasMatchAt(gem2.row, gem2.col)) {
+                    this.moves--;
+                    this.selectedGem = null;
+                    this.processMatches();
+                } else {
+                    // Swap back if no matches
+                    this.board[gem2.row][gem2.col] = this.board[gem1.row][gem1.col];
+                    this.board[gem1.row][gem1.col] = temp;
+                }
+                
+                this.renderBoard();
+                this.updateUI();
+            }
+
+            processMatches() {
+                const matches = this.findAllMatches();
+                if (matches.length > 0) {
+                    const points = matches.length * 100;
+                    this.score += points;
+                    this.removeMatches(matches);
+                    this.dropGems();
+                    this.fillEmpty();
+                    
+                    // Check for combo achievements
+                    if (matches.length >= 5) {
+                        this.showAchievement(`🔥 ${this.playerName} Super Combo!`);
+                    }
+                    
+                    setTimeout(() => {
+                        this.processMatches(); // Check for cascade matches
+                    }, 300);
+                }
+                
+                this.checkLevelUp();
+                this.checkGameOver();
+            }
+
+            findAllMatches() {
+                const matches = [];
+                const visited = new Set();
+                
+                for (let row = 0; row < this.size; row++) {
+                    for (let col = 0; col < this.size; col++) {
+                        const key = `${row},${col}`;
+                        if (!visited.has(key) && this.hasMatchAt(row, col)) {
+                            const matchGroup = this.getMatchGroup(row, col);
+                            matchGroup.forEach(pos => {
+                                visited.add(`${pos.row},${pos.col}`);
+                                matches.push(pos);
+                            });
+                        }
+                    }
+                }
+                
+                return matches;
+            }
+
+            getMatchGroup(row, col) {
+                const gem = this.board[row][col];
+                const group = [];
+                const visited = new Set();
+                
+                const dfs = (r, c) => {
+                    const key = `${r},${c}`;
+                    if (visited.has(key) || r < 0 || r >= this.size || c < 0 || c >= this.size) return;
+                    if (this.board[r][c].type !== gem.type) return;
+                    
+                    visited.add(key);
+                    group.push({ row: r, col: c });
+                    
+                    // Check all 4 directions
+                    dfs(r-1, c); dfs(r+1, c); dfs(r, c-1); dfs(r, c+1);
+                };
+                
+                dfs(row, col);
+                return group.length >= 3 ? group : [];
+            }
+
+            removeMatches(matches) {
+                matches.forEach(match => {
+                    this.board[match.row][match.col] = null;
+                });
+            }
+
+            dropGems() {
+                for (let col = 0; col < this.size; col++) {
+                    let writeIndex = this.size - 1;
+                    for (let row = this.size - 1; row >= 0; row--) {
+                        if (this.board[row][col] !== null) {
+                            this.board[writeIndex][col] = this.board[row][col];
+                            if (writeIndex !== row) {
+                                this.board[row][col] = null;
+                            }
+                            writeIndex--;
+                        }
+                    }
+                }
+            }
+
+            fillEmpty() {
+                for (let row = 0; row < this.size; row++) {
+                    for (let col = 0; col < this.size; col++) {
+                        if (this.board[row][col] === null) {
+                            this.board[row][col] = this.getRandomGem();
+                        }
+                    }
+                }
+            }
+
+            checkLevelUp() {
+                if (this.score >= this.targetScore) {
+                    this.level++;
+                    this.targetScore *= 1.5;
+                    this.moves += 20;
+                    this.showAchievement(`🎊 ${this.playerName} reached Level ${this.level}!`);
+                    
+                    // Show interstitial ad opportunity
+                    if (this.level % 3 === 0) {
+                        this.showInterstitialAd();
+                    }
+                }
+            }
+
+            checkGameOver() {
+                if (this.moves <= 0) {
+                    this.gameOver();
+                }
+            }
+
+            gameOver() {
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('finalLevel').textContent = this.level;
+                document.getElementById('gameOver').style.display = 'flex';
+                
+                // Track high score with player name
+                const highScoreKey = `gemCrusherHighScore_${this.playerName}`;
+                const highScore = localStorage.getItem(highScoreKey) || 0;
+                if (this.score > highScore) {
+                    localStorage.setItem(highScoreKey, this.score);
+                    this.showAchievement(`🏆 ${this.playerName} New High Score!`);
+                }
+            }
+
+            updateUI() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('moves').textContent = this.moves;
+                
+                const progress = Math.min((this.score % this.targetScore) / (this.targetScore / this.level) * 100, 100);
+                document.getElementById('progress').style.width = progress + '%';
+            }
+
+            showAchievement(text) {
+                const achievement = document.getElementById('achievement');
+                achievement.textContent = text;
+                achievement.classList.add('show');
+                setTimeout(() => {
+                    achievement.classList.remove('show');
+                }, 3000);
+            }
+
+            showInterstitialAd() {
+                // Call AdMob interstitial ad
+                if (window.AdMob && window.AdMob.showInterstitial) {
+                    window.AdMob.showInterstitial();
+                } else {
+                    console.log('AdMob interstitial ad would show here');
+                }
+            }
+        }
+
+        let game;
+
+        function startGame() {
+            game = new GemCrusher();
+        }
+
+        function restartGame() {
+            document.getElementById('gameOver').style.display = 'none';
+            game = new GemCrusher();
+        }
+
+        function showHint() {
+            if (game.moves > 0) {
+                game.moves--;
+                game.updateUI();
+                alert('💡 Look for groups of 3+ matching gems in rows or columns!');
+            }
+        }
+
+        function watchAdForBonus() {
+            // Call AdMob rewarded video ad
+            if (window.AdMob && window.AdMob.showRewardedVideo) {
+                window.AdMob.showRewardedVideo({
+                    onReward: function() {
+                        game.moves += 10;
+                        game.updateUI();
+                        document.getElementById('gameOver').style.display = 'none';
+                        game.showAchievement(`🎁 ${game.playerName} got +10 Bonus Moves!`);
+                    }
+                });
+            } else {
+                // Fallback for testing
+                alert('📺 AdMob rewarded video would play here');
+                game.moves += 10;
+                game.updateUI();
+                document.getElementById('gameOver').style.display = 'none';
+            }
+        }
+
+        // Initialize game on load
+        window.addEventListener('load', startGame);
+
+        // Prevent zoom on mobile
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
